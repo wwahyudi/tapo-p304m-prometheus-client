@@ -4,8 +4,6 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/go/dockerfile-reference/
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
 ARG PYTHON_VERSION=3.11.4
 FROM python:${PYTHON_VERSION}-slim AS base
 
@@ -17,9 +15,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Username, Password, and IP Address for Tapo
-ENV TAPO_USERNAME=email@gmail.com
-ENV TAPO_PASSWORD=password
-ENV TAPO_IP_ADDRESS=XXX.XXX.XXX.XXX
+ENV TAPO_USERNAME=
+ENV TAPO_PASSWORD=
+ENV TAPO_IP_ADDRESS=
 
 WORKDIR /app
 
@@ -43,14 +41,18 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     --mount=type=bind,source=requirements.txt,target=requirements.txt \
     python -m pip install -r requirements.txt
 
-# Switch to the non-privileged user to run the application.
-USER appuser
-
 # Copy the source code into the container.
 COPY . .
+COPY entrypoint.sh /entrypoint.sh
+
+# Set the entrypoint script to run when the container starts.
+RUN chmod +x /entrypoint.sh
+
+# Switch to the non-privileged user to run the application.
+USER appuser
 
 # Expose the port that the application listens on.
 EXPOSE 8882
 
 # Run the application.
-CMD python3 prometheus.py
+ENTRYPOINT ["/entrypoint.sh"]
