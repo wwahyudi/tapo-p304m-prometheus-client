@@ -39,7 +39,9 @@ except Exception as e:
 DEFAULT_LABELS = ['device_id', 'hw_id', 'fw_ver', 'ip', 'type', 'model']
 default_device_labels = {k: device_info[k] for k in DEFAULT_LABELS}
 
-PLUG_LABELS = DEFAULT_LABELS + ['plug_position', 'plug_device_id']
+print("default_device_labels", default_device_labels)
+
+PLUG_LABELS = DEFAULT_LABELS + ['plug_position', 'plug_device_id', 'plug_nickname']
 
 # Create a Prometheus registry
 registry = CollectorRegistry()
@@ -119,9 +121,12 @@ async def update_plug_metrics():
             plugs = tapo_p304m.tapo_p304m_plugs()
             count = 0
             for plug in plugs.get('child_device_list', []):
-                label_args = dict(default_device_labels,
-                                  plug_position=plug['position'],
-                                  plug_device_id=plug['device_id'])
+                label_args = dict(
+                    default_device_labels,
+                    plug_position=plug['position'],
+                    plug_device_id=plug['device_id'],
+                    plug_nickname=plug['nickname']
+                )
                 # Gauges
                 plug_gauges['current_ma'].labels(**label_args).set(plug['current_ma'])
                 plug_gauges['voltage_mv'].labels(**label_args).set(plug['voltage_mv'])

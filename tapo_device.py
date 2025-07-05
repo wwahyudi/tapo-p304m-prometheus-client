@@ -92,7 +92,16 @@ class TapoDevice:
     # new added
     def get_child_device_list(self) -> dict:
         """Get the list of child devices (plugs) connected to the main device"""
-        return self.request("get_child_device_list")
+        result = self.request("get_child_device_list")
+        child_list = result.get('child_device_list', [])
+        for device in child_list:
+            # Decode nickname
+            if device.get('nickname'):
+                try:
+                    device['nickname'] = b64decode(device['nickname']).decode('utf-8')
+                except Exception:
+                    pass
+        return result
 
     # new added
     def get_child_device_component_list(self) -> dict:
@@ -129,3 +138,14 @@ class TapoDevice:
             log.exception("Failed to decode device nickname")
             name = ""
         return name
+    
+    def get_device_description(self) -> str:
+        """Get the device description (decoded from base64)."""
+        data = self.get_device_info()
+        try:
+            encoded_description = data.get("description", "")
+            description = b64decode(encoded_description).decode("utf-8")
+        except Exception: # pylint: disable=broad-except
+            log.exception("Failed to decode device description")
+            description = ""
+        return description
